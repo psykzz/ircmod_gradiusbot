@@ -33,21 +33,20 @@ class ModBot(client.SimpleClient):
         print "<{0}/{1}> {2}".format(event.source, event.target, event.message)
 
     def message_handler(self, client, event):
-        print "<{0}/{1}> {2}".format(event.source, event.target, event.message)
-
         # Add any functions from the mod_functions class here that you want executed each message
         # Use if statements wherever possible to avoid executing each function unless needed
         # Pass your function the self.send_message_callback to allow it to send messages to the channel
 
         # Blanket try/except block, other methods should implement more specific error checking
         try:
-            if event.message[0] == "@":
-                self.mf.admin(event, self.send_message_callback)
+            # Check for private messages, execute things here that you don't want in main channel.
+            if event.target == self.nick:
+                if event.message[0] == "@":
+                    self.mf.admin(event, self.send_message_callback)
 
             if event.message[0] == "!":
                 self.mf.commands(event, self.send_message_callback)
 
-            self.mf.flag_words(event, self.send_message_callback)
             self.mf.flag_urls(event, self.send_message_callback)
 
         except:

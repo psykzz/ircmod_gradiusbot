@@ -6,7 +6,9 @@ class ModFunctions():
         print
 
     def admin(self, event, message_callback_function):
-        print
+        # Remember this block is taking place inside a private message conversation
+        # All messages need to be sent to source and not target since target is the bot
+        message_callback_function(event.source, "I've recieved your PM")
 
     def commands(self, event, message_callback_function):
         print
@@ -16,7 +18,7 @@ class ModFunctions():
 
     def flag_urls(self, event, message_callback_function):
         bad_urls = []
-        print
+        print event.source, "said", event.message
 
     def check_for_spam(self, event, message_callback_function):
         print
