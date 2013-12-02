@@ -4,6 +4,7 @@ port = 6667
 nick = GradiusBot
 username = GradiusBot
 password =
+mod_channel =
 channels =
     #testgradius
 owner = riotgradius

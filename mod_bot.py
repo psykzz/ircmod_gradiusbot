@@ -1,6 +1,7 @@
 from ircutils import client
 from mod_functions import ModFunctions
 import ConfigParser
+import sys
 
 class ModBot(client.SimpleClient):
 
@@ -16,19 +17,17 @@ class ModBot(client.SimpleClient):
         self.username = config.get('Settings', 'username')
         self.password = config.get('Settings', 'password')
         self.owner = config.get('Settings', 'owner')
+        self.mod_chan = config.get('Settings', 'mod_channel')
 
         channels_string = config.get('Settings', 'channels')
         self.channels_join = list(filter(None, (x.strip() for x in channels_string.splitlines())))
-
-        function_string = config.get('Settings', 'functions')
-        self.function_list = list(filter(None, (x.strip() for x in function_string.splitlines())))
 
         self.mf = ModFunctions()
 
         client.SimpleClient.__init__(self, self.nick)
 
-    def send_message_callback(self,target="",message=""):
-        self.send_message(target,message)
+    def send_message_callback(self, target="", message=""):
+        self.send_message(target, message)
 
     def message_printer(self, client, event):
         print "<{0}/{1}> {2}".format(event.source, event.target, event.message)
@@ -40,14 +39,20 @@ class ModBot(client.SimpleClient):
         # Use if statements wherever possible to avoid executing each function unless needed
         # Pass your function the self.send_message_callback to allow it to send messages to the channel
 
-        if event.message[0] == "@":
-            self.mf.admin(event, self.send_message_callback)
+        # Blanket try/except block, other methods should implement more specific error checking
+        try:
+            if event.message[0] == "@":
+                self.mf.admin(event, self.send_message_callback)
 
-        if event.message[0] == "!":
-            self.mf.commands(event, self.send_message_callback)
+            if event.message[0] == "!":
+                self.mf.commands(event, self.send_message_callback)
 
-        self.mf.flag_words(event, self.send_message_callback)
-        self.mf.flag_urls(event, self.send_message_callback)
+            self.mf.flag_words(event, self.send_message_callback)
+            self.mf.flag_urls(event, self.send_message_callback)
+
+        except:
+            print "A generic error has occured:", sys.exc_info()
+            self.send_message(self.mod_chan, "A generic error has occured: " + str(sys.exc_info()))
 
 
     def notice_printer(self, client, event):
