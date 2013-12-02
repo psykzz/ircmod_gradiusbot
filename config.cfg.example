@@ -1,0 +1,9 @@
+[Settings]
+server = irc.quakenet.org
+port = 6667
+nick = GradiusBot
+username = GradiusBot
+password =
+channels =
+    #testgradius
+owner = riotgradius

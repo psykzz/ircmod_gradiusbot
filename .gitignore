@@ -1,5 +1,9 @@
 *.py[cod]
 
+# Self written ignores
+*.cfg
+.idea/
+
 # C extensions
 *.so
 
