@@ -46,7 +46,9 @@ class ModBot(client.SimpleClient):
         if event.message[0] == "!":
             self.mf.commands(event, self.send_message_callback)
 
-        self.mf.ban_words(event, self.send_message_callback)
+        self.mf.flag_words(event, self.send_message_callback)
+        self.mf.flag_urls(event, self.send_message_callback)
+
 
     def notice_printer(self, client, event):
         print "(NOTICE) {0}".format(event.message)
