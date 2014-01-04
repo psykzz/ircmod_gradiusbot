@@ -28,6 +28,8 @@ class ModBot(client.SimpleClient):
         tribunal_config = dict(
             'spam_message_rate'     : config.get('Tribunal', 'spam_message_rate'),
             'spam_message_per_sec'  : config.get('Tribunal', 'spam_message_per_sec'),
+            'points_per_infraction' : config.get('Tribunal', 'points_per_infraction'),
+            'point_deduction_rate'  : config.get('Tribunal', 'point_deduction_rate'),
             )
         self.tribunal = Tribunal(tribunal_config, self.send_message_callback)
 
