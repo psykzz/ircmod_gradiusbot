@@ -11,9 +11,12 @@ class Tribunal(object):
         self._user_spam     = dict()        # of tuples             ['psykzz'] = (10,timestamp)
         self._common_urls   = dict()        # single values         ['google.com'] = 5
 
-        # Spam config, the default here is to alert of more then 5 messages in a 10 second burst.
+        # Spam config, the default here is to alert of more then 5 messages in a 10 second burst, gaining 5 points for each infraction
         self._spam_message_rate = config.get('spam_message_rate', 5)
         self._spam_message_per_sec = config.get('spam_message_per_sec', 10)
+        self._points_per_infraction = config.get('points_per_infraction', 5)
+        self._point_deduction_rate = config.get('points_per_infraction', 5)
+
 
         # regex for finding urls
         self.__url_regex_pattern = r'http[s]?://[^\s<>"]+|www\.[^\s<>"]+' 
@@ -47,11 +50,11 @@ class Tribunal(object):
         error_log = []
         # check was there all caps
         if _check_for_allcaps(event):
-            local_score += 5        # 5 points for all caps
+            local_score += self._points_per_infraction        # 5 points for all caps
             error_log.append('Using AllCaps')
         # check for spam :(
         if _check_for_individual_spam(event):
-            local_score += 5        # 5 points for all the things!
+            local_score += self._points_per_infraction        # 5 points for all the things!
             error_log.append('Spamming in chat')
         # check for spamming urls 5 maybe too many?
         if _capture_urls(event) > 5:
@@ -62,7 +65,7 @@ class Tribunal(object):
             self._add_points(event.source, local_score)
             self._send(event.source, 'OMFG N00B u dun goofed, if you dont stop this shit! >>  '+[error for error in error_log])
         else:
-            self._remove_points(event.source, 5)
+            self._remove_points(event.source, self._point_deduction_rate)
         
     def _check_for_allcaps(self, event):
         return all(word.isupper() for word in event.message)
@@ -99,5 +102,7 @@ class Tribunal(object):
             return urls
         else:
             return len(urls)
+
+
         
         
