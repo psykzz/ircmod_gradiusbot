@@ -15,7 +15,7 @@ class Tribunal(object):
         self._spam_message_rate = config.get('spam_message_rate', 5)
         self._spam_message_per_sec = config.get('spam_message_per_sec', 10)
         self._points_per_infraction = config.get('points_per_infraction', 5)
-        self._point_deduction_rate = config.get('points_per_infraction', 5)
+        self._point_deduction_rate = config.get('point_deduction_rate', 5)
 
 
         # regex for finding urls
