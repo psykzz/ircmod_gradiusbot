@@ -8,3 +8,7 @@ mod_channel =
 channels =
     #testgradius
 owner = riotgradius
+
+[Tribunal]
+spam_message_rate = 5
+spam_message_per_sec = 10
