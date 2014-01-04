@@ -1,5 +1,6 @@
 from ircutils import client
 from mod_functions import ModFunctions
+from mod_tribunal import Tribunal
 import ConfigParser
 import sys
 
@@ -22,7 +23,13 @@ class ModBot(client.SimpleClient):
         channels_string = config.get('Settings', 'channels')
         self.channels_join = list(filter(None, (x.strip() for x in channels_string.splitlines())))
 
-        self.mf = ModFunctions()
+        self.mf = ModFunctions()    
+        
+        tribunal_config = dict(
+            'spam_message_rate'     : config.get('Tribunal', 'spam_message_rate'),
+            'spam_message_per_sec'  : config.get('Tribunal', 'spam_message_per_sec'),
+            )
+        self.tribunal = Tribunal(tribunal_config, self.send_message_callback)
 
         client.SimpleClient.__init__(self, self.nick)
 
@@ -48,6 +55,8 @@ class ModBot(client.SimpleClient):
                 self.mf.commands(event, self.send_message_callback)
 
             self.mf.flag_urls(event, self.send_message_callback)
+            
+            self.tribunal.check_messages(client, event)
 
         except:
             print "A generic error has occured:", sys.exc_info()
