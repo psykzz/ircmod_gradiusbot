@@ -19,7 +19,7 @@ class Tribunal(object):
 
 
         # regex for finding urls
-        self.__url_regex_pattern = r'http[s]?://[^\s<>"]+|www\.[^\s<>"]+' 
+        self.__url_regex_pattern = r'http[s]?://[^\s<>"]+|www\.[^\s<>"]+'
         self._url_regex_pattern = re.compile(self.__url_regex_pattern)
 
         # callback messaging function to message through IRC
@@ -29,16 +29,30 @@ class Tribunal(object):
         return self._callback_message_func(target, message)
 
     def requires_action(self, name, limit=50):
-        if self._user_points[name] > limit:
+        if self._get_points(name) > limit:
             return True
         return False
-        
+
+    def _get_points(self, name):
+        if name is None:
+            return
+        if name not in self._user_points:
+            return
+        return self._user_points[name]
+
+    def _set_points(self, name, points):
+        if name is None:
+            return
+        if points is None:
+            return
+        self._user_points[name] = points
+
     def _add_points(self, name, points=1):
         if name not in self._user_points:
             self._user_points[name] = points
         else:
             self._user_points[name] += points
-            
+
     def _remove_points(self, name, points=1):
         if name not in self._user_points:
             self._user_points[name] = points
@@ -49,44 +63,46 @@ class Tribunal(object):
         local_score = 0
         error_log = []
         # check was there all caps
-        if _check_for_allcaps(event):
+        if self._check_for_allcaps(event):
             local_score += self._points_per_infraction        # 5 points for all caps
             error_log.append('Using AllCaps')
         # check for spam :(
-        if _check_for_individual_spam(event):
+        spam = self._check_for_individual_spam(event)
+        self._send(event.target, str(spam))
+        if spam is False: # Stupid but i want to try and be clever...
             local_score += self._points_per_infraction        # 5 points for all the things!
             error_log.append('Spamming in chat')
         # check for spamming urls 5 maybe too many?
-        if _capture_urls(event) > 5:
+        if self._capture_urls(event) > 5:
             local_score += 1
             error_log.append('Spamming URLS')
 
         if local_score > 0:
             self._add_points(event.source, local_score)
-            self._send(event.source, 'OMFG N00B u dun goofed, if you dont stop this shit! >>  '+[error for error in error_log])
+            self._send(event.source, 'OMFG N00B u dun goofed, if you dont stop this shit! Points : {}, errors : {}'.format(self._get_points(event.source), error_log))
         else:
             self._remove_points(event.source, self._point_deduction_rate)
-        
+
     def _check_for_allcaps(self, event):
-        return all(word.isupper() for word in event.message)
+        return all(word.isupper() or word.isspace() for word in event.message)
 
     def _check_for_individual_spam(self, event):
         now = datetime.datetime.now()
         allowance = self._spam_message_rate
-        if event.source in self.user_spam:
-            time_passed = now - self.user_spam[event.source][1]
-            allowance = self.user_spam[event.source][0]
+        if event.source in self._user_spam:
+            time_passed = now - self._user_spam[event.source][1]
+            allowance = self._user_spam[event.source][0]
             allowance += time_passed.seconds * (self._spam_message_rate / self._spam_message_per_sec)
             if allowance > self._spam_message_rate:
                 allowance = self._spam_message_rate
             allowance -= 1
-            self.user_spam[event.source] = (allowance, now)
+            self._user_spam[event.source] = (allowance, now)
         else:
-            self.user_spam[event.source] = (allowance, now)
-        if (allowance > 1):
-            return True 
+            self._user_spam[event.source] = (allowance, now)
+        if (allowance < 1):
+            return False
         else:
-            return False 
+            return allowance
 
     def _capture_urls(self, event, return_urls=False):
         # not sure if convert to string is needed.
@@ -103,6 +119,9 @@ class Tribunal(object):
         else:
             return len(urls)
 
+    def _save_urls(self):
+        raise NotImplementedError
 
-        
-        
+
+
+

@@ -2,7 +2,7 @@ from ircutils import client
 from mod_functions import ModFunctions
 from mod_tribunal import Tribunal
 import ConfigParser
-import sys
+import sys, traceback
 
 class ModBot(client.SimpleClient):
 
@@ -23,14 +23,14 @@ class ModBot(client.SimpleClient):
         channels_string = config.get('Settings', 'channels')
         self.channels_join = list(filter(None, (x.strip() for x in channels_string.splitlines())))
 
-        self.mf = ModFunctions()    
-        
-        tribunal_config = dict(
-            'spam_message_rate'     : config.get('Tribunal', 'spam_message_rate'),
-            'spam_message_per_sec'  : config.get('Tribunal', 'spam_message_per_sec'),
-            'points_per_infraction' : config.get('Tribunal', 'points_per_infraction'),
-            'point_deduction_rate'  : config.get('Tribunal', 'point_deduction_rate'),
-            )
+        self.mf = ModFunctions()
+
+        tribunal_config = {
+            'spam_message_rate'     : config.getint('Tribunal', 'spam_message_rate'),
+            'spam_message_per_sec'  : config.getint('Tribunal', 'spam_message_per_sec'),
+            'points_per_infraction' : config.getint('Tribunal', 'points_per_infraction'),
+            'point_deduction_rate'  : config.getint('Tribunal', 'point_deduction_rate'),
+            }
         self.tribunal = Tribunal(tribunal_config, self.send_message_callback)
 
         client.SimpleClient.__init__(self, self.nick)
@@ -53,15 +53,19 @@ class ModBot(client.SimpleClient):
                 if event.message[0] == "@":
                     self.mf.admin(event, self.send_message_callback)
 
+
             if event.message[0] == "!":
                 self.mf.commands(event, self.send_message_callback)
 
             self.mf.flag_urls(event, self.send_message_callback)
-            
-            self.tribunal.check_messages(client, event)
+
+            # Only moderate people other then the bot. Might want to add this to the tribunal system
+            # and make it so that it doesnt moderate the +O or +V. Not sure.
+            if event.target != self.nick:
+                self.tribunal.check_messages(client, event)
 
         except:
-            print "A generic error has occured:", sys.exc_info()
+            print "A generic error has occured:\n", traceback.format_exc()
             self.send_message(self.mod_chan, "A generic error has occured: " + str(sys.exc_info()))
 
 

@@ -18,7 +18,7 @@ class ModFunctions():
 
     def flag_urls(self, event, message_callback_function):
         bad_urls = []
-        print event.source, "said", event.message
+        print
 
     def check_for_spam(self, event, message_callback_function):
         print
