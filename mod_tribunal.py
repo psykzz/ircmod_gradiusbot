@@ -1,3 +1,5 @@
+from __future__ import division   # Why is this not standard.
+
 import datetime
 import re
 
@@ -16,6 +18,9 @@ class Tribunal(object):
         self._spam_message_per_sec = config.get('spam_message_per_sec', 10)
         self._points_per_infraction = config.get('points_per_infraction', 5)
         self._point_deduction_rate = config.get('point_deduction_rate', 5)
+        self._allcap_percent_threshold = float(config.get('allcap_percent_threshold', 1))
+        self._allcap_min_length = config.get('allcap_min_length', 3)
+
 
 
         # regex for finding urls
@@ -55,9 +60,9 @@ class Tribunal(object):
 
     def _remove_points(self, name, points=1):
         if name not in self._user_points:
-            self._user_points[name] = points
+            self._user_points[name] = 0
         else:
-            self._user_points[name] += points
+            self._user_points[name] -= points
 
     def check_messages(self, client, event):
         local_score = 0
@@ -84,7 +89,11 @@ class Tribunal(object):
             self._remove_points(event.source, self._point_deduction_rate)
 
     def _check_for_allcaps(self, event):
-        return all(word.isupper() or word.isspace() for word in event.message)
+        if len(event.message) <= self._allcap_min_length:
+            return False
+        _len = sum(1 for word in event.message if word.isalpha())       # Ignore none alpha characters
+        _caps = sum(1 for word in event.message if word.isupper())      # Count the number of upper case characters.
+        return ((_caps / _len) >= self._allcap_percent_threshold)
 
     def _check_for_individual_spam(self, event):
         now = datetime.datetime.now()
@@ -120,7 +129,7 @@ class Tribunal(object):
             return len(urls)
 
     def _save_urls(self):
-        raise NotImplementedError
+        pass
 
 
 

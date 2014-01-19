@@ -30,6 +30,8 @@ class ModBot(client.SimpleClient):
             'spam_message_per_sec'  : config.getint('Tribunal', 'spam_message_per_sec'),
             'points_per_infraction' : config.getint('Tribunal', 'points_per_infraction'),
             'point_deduction_rate'  : config.getint('Tribunal', 'point_deduction_rate'),
+            'allcap_percent_threshold'  : config.getfloat('Tribunal', 'allcap_percent_threshold'),
+            'allcap_min_length'  : config.getfloat('Tribunal', 'allcap_min_length'),
             }
         self.tribunal = Tribunal(tribunal_config, self.send_message_callback)
 
