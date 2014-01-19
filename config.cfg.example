@@ -13,4 +13,6 @@ owner = riotgradius
 spam_message_rate = 5
 spam_message_per_sec = 10
 points_per_infraction = 5
-point_deduction_rate = 5
+point_deduction_rate = 1
+allcap_percent_threshold = 0.75
+allcap_min_length = 3
