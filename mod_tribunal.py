@@ -12,6 +12,7 @@ class Tribunal(object):
         self._user_points   = dict()        # single values         ['psykzz'] = 0
         self._user_spam     = dict()        # of tuples             ['psykzz'] = (10,timestamp)
         self._common_urls   = dict()        # single values         ['google.com'] = 5
+        self._blocked_urls  = set()         # single values         ('google.com',)
 
         # Spam config, the default here is to alert of more then 5 messages in a 10 second burst, gaining 5 points for each infraction
         self._spam_message_rate = config.get('spam_message_rate', 5)
@@ -20,8 +21,6 @@ class Tribunal(object):
         self._point_deduction_rate = config.get('point_deduction_rate', 5)
         self._allcap_percent_threshold = float(config.get('allcap_percent_threshold', 1))
         self._allcap_min_length = config.get('allcap_min_length', 3)
-
-
 
         # regex for finding urls
         self.__url_regex_pattern = r'http[s]?://[^\s<>"]+|www\.[^\s<>"]+'
@@ -38,11 +37,24 @@ class Tribunal(object):
             return True
         return False
 
+    ''' URL System '''
+    def add_url(self, url):
+        self._blocked_urls.add(url)
+
+    def remove_url(self, url):
+        self._blocked_urls.discard(url)     # only need to remove once, as its only added once.
+
+    def check_url(self, url):
+        if url in self._blocked_urls:
+            return True
+        return False
+
+    ''' Point System '''
     def _get_points(self, name):
         if name is None:
             return
         if name not in self._user_points:
-            return
+            return 0
         return self._user_points[name]
 
     def _set_points(self, name, points):
@@ -67,20 +79,28 @@ class Tribunal(object):
     def check_messages(self, client, event):
         local_score = 0
         error_log = []
+
         # check was there all caps
         if self._check_for_allcaps(event):
             local_score += self._points_per_infraction        # 5 points for all caps
             error_log.append('Using AllCaps')
+
         # check for spam :(
         spam = self._check_for_individual_spam(event)
         self._send(event.target, str(spam))
-        if spam is False: # Stupid but i want to try and be clever...
+        if spam is False:       # Stupid that its false but i want to try and be clever...
             local_score += self._points_per_infraction        # 5 points for all the things!
             error_log.append('Spamming in chat')
+
+
+        # Just do the URL check...
+        self._capture_urls(event)
         # check for spamming urls 5 maybe too many?
+        '''
         if self._capture_urls(event) > 5:
             local_score += 1
             error_log.append('Spamming URLS')
+        '''
 
         if local_score > 0:
             self._add_points(event.source, local_score)
@@ -113,6 +133,7 @@ class Tribunal(object):
         else:
             return allowance
 
+    ''' I think this whole system needs to be reworked '''
     def _capture_urls(self, event, return_urls=False):
         # not sure if convert to string is needed.
         urls = self._url_regex_pattern.findall( str(event.message) )

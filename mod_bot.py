@@ -25,6 +25,7 @@ class ModBot(client.SimpleClient):
 
         self.mf = ModFunctions()
 
+        # Tribunal system config
         tribunal_config = {
             'spam_message_rate'         : config.getint('Tribunal', 'spam_message_rate'),
             'spam_message_per_sec'      : config.getint('Tribunal', 'spam_message_per_sec'),
